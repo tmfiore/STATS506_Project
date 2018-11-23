@@ -1,0 +1,133 @@
+---
+title: "group_project_stata"
+author: "Xinye Jiang"
+date: "November 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Doing parametric and non-parametric ANOVA analysis in Stata
+
+Firstly, we load the dataset into Stata by using `import delimited`.
+
+```{r eval=FALSE}
+import delimited Diet.csv
+```
+
+To observe the data preliminarily, we check the summary of data by using `summarize`.
+
+```{r eval=FALSE}
+summarize
+```
+![](dietsummary.png)
+
+All variables seem reasonable except 'gender'. Its abnormal summary probably is due to missing data. So we take a deeper look at the variable 'gender' by viewing the first ten rows of the data using `list`.
+
+```{r eval=FALSE}
+list gender in 1/10
+```
+![](gender.png)
+
+The variable 'gender' does have missing values. We delete those observations with missing values in 'gender' by `drop if` and change 'gender' from string to numeric by using `destring` (pass the `replace` option in order to overwrite an existing file).
+
+```{r eval=FALSE}
+drop if gender == " "
+destring gender, replace
+```
+
+Then we generate the variable of interest 'weightloss' by `generate`. We only keep those variables that we need by `keep` and save the processed dataset by `save` as we will use it later. Note that in Stata, only a single dataset can be opened at a time. As we want to operate on multiple datasets, we need to switch between them from time to time. So it is important that we save the data with `save` and load the data with `use` (pass the `clear` option to remove the existing data as Stata will refuse if you try and open a new dataset with unsaved changes in the existing data).
+
+```{r eval=FALSE}
+* Generate the variable 'weightloss'
+generate weightloss = weight6weeks - preweight
+* Keep only the needed variables and save the dataset
+keep gender diet weightloss
+save diet.dta
+```
+
+We divide the dataset by 'gender' using `keep if` and save the male data and female data as two seperate datasets. 
+
+```{r eval=FALSE}
+keep if gender == 0
+save diet_female.dta
+use diet.dta, clear
+keep if gender == 1
+save diet_male.dta
+```
+
+### Parametric ANOVA
+
+We regard 'diet' as the grouping variable and use the `oneway` command to do parametric one-way ANOVA for the female data (`tabulate` command provides useful descriptive statistics such as the mean).
+
+```{r eval=FALSE}
+use diet_female.dta, clear
+oneway weightloss diet, tabulate
+```
+![](onewayanovafemale.png)
+
+From the above output table of parametric one-way ANOVA for the female data, we can see that the p-value is much smaller than 0.05 . So we should reject the null hypothesis and conclude that there is at least one group statistically different from other groups in females. 
+
+In order to check that which group is statistically different, we run the Tukey post hoc test for pairwise comparison following a one-way ANOVA using `pwmean DependentVar, over(IndependentVar), mcompare(tukey) effects`.
+
+```{r eval=FALSE}
+pwmean weightloss, over(diet) mcompare(tukey) effects
+```
+![](onewaypairwisefemale.png)
+
+From the result above, we can see that there is a statistically significant difference in weight loss between the 'diet 3' group & 'diet 1' group and 'diet 3' group & 'diet 2' group in females. The 'diet 3' group is statistically different from other two groups. 
+
+Do the same things for the male data. The results indicate that  there is no statistically significant difference in weight loss among the three diet groups in males.
+
+```{r eval=FALSE}
+* Parametric one-way ANOVA for male data
+* Regard 'diet' as the grouping variable
+use diet_male.dta, clear
+oneway weightloss diet, tabulate
+```
+![](onewayanovamale.png)
+
+```{r eval=FALSE}
+* Run the Tukey post hoc test for pairwise comparison
+pwmean weightloss, over(diet) mcompare(tukey) effects
+```
+![](onewaypairwisemale.png)
+
+We could also use the `anova` command to do parametric two-way ANOVA for the whole dataset. Now we regard 'gender' and 'diet' as two grouping variables. 
+
+```{r eval=FALSE}
+use diet.dta, clear
+anova weightloss i.gender##i.diet
+```
+![](twowayanova.png)
+
+The gender#diet interaction is statistically significant at the p = 0.0488 level. There was no statistically significant difference in weight loss between gender (p = 0.7785), but there were statistically significant differences between diet groups (p = 0.0130).
+
+```{r eval=FALSE}
+
+```
+
+
+### Nonparametric ANOVA: Kruskal-Wallis Test
+
+We regard 'diet' as the grouping variable and use the `kwallis` command to do nonparametric one-way ANOVA, i.e. Kruskal-Wallis test for the female data. We get a p-value much smaller than 0.05 . So we reject the null hypothesis and get the conclusion that there is at least one group statistically different from other groups in females, which is the same as what we get in parametric one-way anova for the female data.
+
+```{r eval=FALSE}
+use diet_female.dta, clear
+kwallis weightloss, by(diet)
+```
+![](kwallisfemale.png)
+
+Do the same thing for the male data. The results indicate that  there is no statistically significant difference in weight loss among the three diet groups in males, which is also the same as what we get in parametric one-way anova.
+
+```{r eval=FALSE}
+use diet_male.dta, clear
+kwallis weightloss, by(diet)
+```
+![](kwallismale.png)
+
+
+
+
