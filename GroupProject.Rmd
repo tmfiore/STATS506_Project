@@ -31,25 +31,25 @@ Then we need to create the variable of interest 'weightlost'.
 diet.R$weightlost = diet.R$pre.weight - diet.R$weight6weeks
 ```
 
-We then split the dataset into subsets by 'gender' using `subset()` so that we now have a dataset for females and a dataset for males.
+We then split the dataset into subsets by 'gender' using `subset()` so we can have separate datasets for the female and male data.
 
 ```{r}
 Diet.female = subset(diet.R, gender==0)
 Diet.male = subset(diet.R, gender==1)
 ```
 
-After all of this we can start our analysis.
+Now that we have all the setup work done we can move on to our ANOVA analysis.
 
 ## Parametric ANOVA
 
-We use 'Diet' as the grouping variable and use `aov()` to create our parametric one-way ANOVA model for the female dataset. We then use `summary()` to analyze our model.
+To create our ANOVA model we use 'Diet' as the grouping variable and use `aov()` to create our parametric one-way ANOVA model for the female dataset. We can then use `summary()` to analyze this model.
 
 ```{r}
 anovaFemale = aov(weightlost~Diet, data = Diet.female)
 summary(anovaFemale)
 ```
 
-From the above output of the parametric one-way ANOVA for the female dataset, we can see that the p-value is much smaller than 0.05 so we can conclude that there is at least one group that is statistically different from the other groups in the female dataset.
+From the above output of the parametric one-way ANOVA for the female dataset, we can see that the p-value is much smaller than 0.05 so we conclude that there is at least one group that is statistically different from the other groups in the female dataset.
 
 In order to check which group is statistically different, we run the Tukey post hoc test for pairwise comparison following a one-way ANOVA using `TukeyHSD()`. 
 
@@ -59,7 +59,7 @@ TukeyHSD(anovaFemale)
 
 From the above result we can see that there is a statistically significant difference in weight loss between the 'Diet 3' group and the 'Diet 1' group and between the 'Diet 3' group and the 'Diet 2' group. Because of this we can determine that the 'Diet 3' group is statistically different from the other two groups. 
 
-We then do the same thing for the male dataset.
+Now let's do the same thing for the male dataset.
 
 ```{r}
 anovaMale = aov(weightlost~Diet, data = Diet.male)
@@ -74,9 +74,9 @@ Let's confirm this by looking at the Tukey post hoc test.
 TukeyHSD(anovaMale)
 ```
 
-As you can see there is no statistical significane between the three groups in the male dataset.
+As you can see there is no statistically significant difference between the three groups in the male dataset.
 
-These plots help visualize these two Tukey post hoc tests. Here is the plot for the female data. 
+The following plots help visualize these two Tukey post hoc tests. Here is the plot for the female data. 
 
 ```{r}
 library(gplots)
@@ -89,7 +89,7 @@ And here is the plot for the male data.
 plotmeans(weightlost~Diet, data = Diet.male)
 ```
 
-We could also do parametric two-way ANOVA for the whole dataset. For this we still use `aov()` but now we regard 'gender' and 'Diet as two grouping variables. 
+A similar way we could analysis this data is to do parametric two-way ANOVA for the whole dataset. For this we still use `aov()` but now we regard 'gender' and 'Diet as two grouping variables. 
 
 ```{r}
 anova2 = aov(weightlost~gender*Diet,data=diet.R)
@@ -100,7 +100,7 @@ The gender:Diet interaction is statistically significant at the p = 0.04884 leve
 
 ## Nonparametric ANOVA: Kruskal-Wallis Test
 
-We regard 'Diet' as the grouping variable and use `kruskal.test()` to do nonparametric one-way ANOVA, i.e. Kruskal-Wallis test for the female data.
+Now let's look at Nonparametric ANOVA using the Kruskal-Wallis Test. We regard 'Diet' as the grouping variable and use `kruskal.test()` to do nonparametric one-way ANOVA, i.e. Kruskal-Wallis test for the female data.
 
 ```{r}
 kruskal.test(weightlost~Diet, data = Diet.female)
