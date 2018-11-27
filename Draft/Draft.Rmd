@@ -10,30 +10,31 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Introduction and Overview
+The focus of this tutorial is *analysis of variance (ANOVA)*. ANOVA is a statistical approach to compare means of an outcome variable of interest across different groups. If there are only two groups, the testing problem could simply use a $t$-test. But ANOVA makes it possible to test a multiple null hypothesis that compares several groups simultaneously, which would otherwise be tested by several $t$-tests with larger type I error.
 
-The focus of this tutorial is analysis of variance(ANOVA). ANOVA is a statiscal approach to compare means of an outcome variable of interest across different groups. If there are only two groups, the testing problem could simply use a t-test. But ANOVA makes it possible to test a multiple null hypothesis that compares several groups simulataneously, which would otherwise be tested by several t-tests with larger type I error.
 
-
-With some mild parametric assumptions over the outcome variable, such as assuming normality, independence and homoskedasticity, the **parametric** one-way ANOVA takes up a simple form:
+With some mild parametric assumptions over the outcome variable, such as normality, independence, and homoscedasticity, the **parametric** one-way ANOVA has a simple form for the observed random variable $y$ in the $j$-th case of group $i$:
 $$
 y_{ij} = u + \mu_i+\epsilon_{ij}
 $$
-where $\epsilon_{ij}$ is i.i.d $N(o,\sigma^2)$. And each group i has a unique group mean $(u+\mu_i)$. If there are more than one grouping variable, take 2 grouping variables as an example, with the same assumptions, the two-way ANOVA takes up a slightly more complex form:
+where $\epsilon_{ij}$ is i.i.d $N(o,\sigma^2)$, and each group $i$ has a unique group mean $u+\mu_i$ (here $u$ is the grand mean). If there is more than one grouping variable, say 2 grouping variables as an example, with the same assumptions, the two-way ANOVA has a slightly more complex form:
 $$
 y_{ijk} = u + \mu_i + \eta_j + \gamma_{ij} + \epsilon_{ijk}
 $$
-where $\epsilon_{ijk}$ is i.i.d $N(o,\sigma^2)$. ANOVA analysis is simply attributing the grand variations in the outcome variables into the variation caused by the specific group means and the unexplainable random noises. And then compare the variations attributable to specific group means and those attributed to the noises and see if the group means are responsible for a relatively large size of the variation.
+where $\epsilon_{ijk}$ is i.i.d $N(o,\sigma^2)$. ANOVA analysis is simply attributing the grand variations in the outcome variables into the variation caused by the specific group means and the unexplainable random noises. And then ANOVA compares the variations attributable to specific group means and those attributed to the noises and see if the group means are responsible for a relatively large size of the variation.
 
-Sometimes the assumptions for the parametric ANOVA above is not satisfied in some small sample, and we could instead turn to a nonparametric counterpart of ANOVA, called Kruskal-Wallis test. Kruskal-Wallis test simply transforms the original outcome variable data into the ranks of the data and then test whether group mean ranks are different. Based on normality, the parametric ANOVA uses F-test while the Kruskal-Wallis test uses permutation test instead, which typically has more power in non-normal cases. In this tutorial, we would briefly go over one-way, two-way ANOVA and Kruksal-Wallis test in R,STATA and MATLAB.
+Sometimes the assumptions for the parametric ANOVA above are not satisfied, and we could instead turn to a nonparametric counterpart of ANOVA, called *Kruskal-Wallis test*. The Kruskal-Wallis test simply transforms the original outcome variable data into the ranks of the data and then tests whether group mean ranks are different. Based on normality, the parametric ANOVA uses F-test while the Kruskal-Wallis test uses permutation test instead, which typically has more power in non-normal cases. In this tutorial, we would briefly go over one-way ANOVA, two-way ANOVA, and the Kruskal-Wallis test in R, STATA, and MATLAB.
 
-Since the ANOVA could only tells us whether the group means of all groups are different, we still need to identify which groups are actually different by doing multiple comparisons across different group pairs. For anova result, a specific multiple comparison approach could be used, which is called Tukey honest significance test. The test simply compares pairwise group means but just like many other multiple comparison(p-value adjustment) methods, it controls for family-wise error rate(FWER).
-We would also demostrate how to do this post-estimation step in all three languages. For a deeper and detailed introduction to one-way ANOVA and Tukey's HSD, please refer to [this](https://www.spss-tutorials.com/anova-what-is-it/#assumptions). For two-way ANOVA, the tutorial by Penn State [here](https://onlinecourses.science.psu.edu/stat500/node/216/) is helpful. And in terms of Kruskal-Wallis test, refer to section 6.1 in book *Nonparametric Statistical Methods* by Hollander and Wolfe for a more theoretical-based treatment.
+Since the ANOVA could only tell us whether the group means of all groups are different, we still need to identify which groups are actually different by doing multiple comparisons across different group pairs. For ANOVA results, a specific multiple comparison approach could be used, which is called the *Tukey honest significance test*. The test simply compares pairwise group means but just like many other multiple comparison ($p$-value adjustment) methods, it controls for family-wise error rate (FWER).
+We will also demonstrate how to do this post-estimation step in all three languages. For a deeper and detailed introduction to one-way ANOVA and Tukey's HSD, please refer to [this](https://www.spss-tutorials.com/anova-what-is-it/#assumptions). For two-way ANOVA, the tutorial at Penn State [here](https://onlinecourses.science.psu.edu/stat500/node/216/) is helpful. And for Kruskal-Wallis test, refer to Section 6.1 in book *Nonparametric Statistical Methods* by Hollander and Wolfe for a more theoretical treatment.
 
-The data set we use for the illustration is the **diet** data, which is a small survey of several male and female adults who take on three different diet plans. And the focus of the survey is people's body weight changes during a six-week time period. A link to the data could be found [here](https://www.sheffield.ac.uk/mash/statistics2/anova).
+The data set we use for the illustration is the **diet** data, which is a small survey of several male and female adults who take on three different diet plans. And the focus of the survey is people's body weight changes during a six-week time period. A link to the data could be found [here](https://www.sheffield.ac.uk/mash/statistics2/anova). 
+
+In the R, STATA, and MATLAB tutorials below, we first do a one-way ANOVA for weight loss for only females and for only males across the three diets and make a graph that shows the confidence intervals (adjusted for multicomparisons) for the three weight loss group means. Next we do two-way ANOVA for weight loss for males/females across the three diets. Finally, we again do the initial task of one-way ANOVA for weight loss for only females and for only males across the three diets, but use the Kruskal-Wallis test instead of parametric ANOVA.
 
 
 
-#{.tabset}
+#{.tabset .tabset-fade}
 
 ## R
 
@@ -57,25 +58,25 @@ Then we need to create the variable of interest 'weightlost'.
 diet.R$weightlost = diet.R$pre.weight - diet.R$weight6weeks
 ```
 
-We then split the dataset into subsets by 'gender' using `subset()` so that we now have a dataset for females and a dataset for males.
+We then split the dataset into subsets by 'gender' using `subset()` so we can have separate datasets for the female and male data.
 
 ```{r}
 Diet.female = subset(diet.R, gender==0)
 Diet.male = subset(diet.R, gender==1)
 ```
 
-After all of this we can start our analysis.
+Now that we have all the setup work done we can move on to our ANOVA analysis.
 
 ### Parametric ANOVA
 
-We use 'Diet' as the grouping variable and use `aov()` to create our parametric one-way ANOVA model for the female dataset. We then use `summary()` to analyze our model.
+To create our ANOVA model we use 'Diet' as the grouping variable and use `aov()` to create our parametric one-way ANOVA model for the female dataset. We can then use `summary()` to analyze this model.
 
 ```{r}
 anovaFemale = aov(weightlost~Diet, data = Diet.female)
 summary(anovaFemale)
 ```
 
-From the above output of the parametric one-way ANOVA for the female dataset, we can see that the p-value is much smaller than 0.05 so we can conclude that there is at least one group that is statistically different from the other groups in the female dataset.
+From the above output of the parametric one-way ANOVA for the female dataset, we can see that the p-value is much smaller than 0.05 so we conclude that there is at least one group that is statistically different from the other groups in the female dataset.
 
 In order to check which group is statistically different, we run the Tukey post hoc test for pairwise comparison following a one-way ANOVA using `TukeyHSD()`. 
 
@@ -85,7 +86,7 @@ TukeyHSD(anovaFemale)
 
 From the above result we can see that there is a statistically significant difference in weight loss between the 'Diet 3' group and the 'Diet 1' group and between the 'Diet 3' group and the 'Diet 2' group. Because of this we can determine that the 'Diet 3' group is statistically different from the other two groups. 
 
-We then do the same thing for the male dataset.
+Now let's do the same thing for the male dataset.
 
 ```{r}
 anovaMale = aov(weightlost~Diet, data = Diet.male)
@@ -100,11 +101,11 @@ Let's confirm this by looking at the Tukey post hoc test.
 TukeyHSD(anovaMale)
 ```
 
-As you can see there is no statistical significane between the three groups in the male dataset.
+As you can see there is no statistically significant difference between the three groups in the male dataset.
 
-These plots help visualize these two Tukey post hoc tests. Here is the plot for the female data. 
+The following plots help visualize these two Tukey post hoc tests. Here is the plot for the female data. 
 
-```{r}
+```{r message=FALSE}
 library(gplots)
 plotmeans(weightlost~Diet, data = Diet.female)
 ```
@@ -115,7 +116,7 @@ And here is the plot for the male data.
 plotmeans(weightlost~Diet, data = Diet.male)
 ```
 
-We could also do parametric two-way ANOVA for the whole dataset. For this we still use `aov()` but now we regard 'gender' and 'Diet as two grouping variables. 
+A similar way we could analysis this data is to do parametric two-way ANOVA for the whole dataset. For this we still use `aov()` but now we regard 'gender' and 'Diet as two grouping variables. 
 
 ```{r}
 anova2 = aov(weightlost~gender*Diet,data=diet.R)
@@ -126,7 +127,7 @@ The gender:Diet interaction is statistically significant at the p = 0.04884 leve
 
 ### Nonparametric ANOVA: Kruskal-Wallis Test
 
-We regard 'Diet' as the grouping variable and use `kruskal.test()` to do nonparametric one-way ANOVA, i.e. Kruskal-Wallis test for the female data.
+Now let's look at Nonparametric ANOVA using the Kruskal-Wallis Test. We regard 'Diet' as the grouping variable and use `kruskal.test()` to do nonparametric one-way ANOVA, i.e. Kruskal-Wallis test for the female data.
 
 ```{r}
 kruskal.test(weightlost~Diet, data = Diet.female)
@@ -141,9 +142,6 @@ kruskal.test(weightlost~Diet, data = Diet.male)
 ```
 
 We get a p-value that is larger than 0.05 so there is no statistically significant difference in weight loss between the three groups in the male dataset. This is the same result we got from the parametric one-way ANOVA for the male data.
-
-
-
 
 ## STATA
 
@@ -403,3 +401,20 @@ Result for male subsample:
 ![](kwallismalepairwise_MATLAB.png)
 
 The conclusion from non-parametric test is exactly the same as that in parametric test.
+
+# Things to Consider
+
+The parametric ANOVA is powerful and has several post estimation commands for further analysis. But before doing the parametric ANOVA, especially when working with a dataset with small sample size, we need to carefully check the assumptions of ANOVA. Specifically, we should check whether data in each group follows normal distribution using Kolmogorov-Smirnov test and also test whether the variances of data are equal across groups by doing Levene test.
+
+The other thing to consider is how to do pairwise comparisons for Kruskal-Wallis test. We could do pairwise Wilcoxon rank sum test for each group pair, but it seems unclear to us how to adjust the p-value to control for the overall FWER. The Tukey HSD applied to the parametric ANOVA object seems not applicable to Kruskal-Wallis since it requires the same parametric assumptions as those in parametric ANOVA.
+
+Finally, the result in the current draft has a tiny problem: the two-way ANOVA's result in R does not agree to the results from MATLAB and STATA. The p-value, and the sum of square, is a little bit different between R and the other two languages. Our next step is to uncover the reason why.
+
+# References
+1. [SPSS Tutorial: ANOVA - Simple Introduction](https://www.spss-tutorials.com/anova-what-is-it)
+
+2. [Pennsylvania State University Online Course Statistics 500: Applied Statistics](https://onlinecourses.science.psu.edu/stat500/node/216/) [see Section 11.2]
+
+3. Myles Hollander and Douglas A. Wolfe. *Nonparametric Statistical Methods*, Wiley Series in Probability and Statistics, 1999. [see Section 6.1]
+
+4. Paul Teetor. *R Cookbook*, O'Reilly Media, 2011. [See Sections 11.20, 11.23]
